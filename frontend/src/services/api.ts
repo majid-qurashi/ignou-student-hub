@@ -191,18 +191,26 @@ export async function fetchGradeCard(
       cache: 'no-store'
     });
 
-    if (res.ok) {
-      return await res.json();
+    const data = await res.json().catch(() => null);
+
+    if (res.ok && data) {
+      return data;
+    } else if (data && data.message) {
+      return {
+        status: "error",
+        message: data.message
+      };
     } else {
       return {
         status: "error",
-        message: "Incorrect details provided or Grade Card not found."
+        message: `API request failed (HTTP ${res.status}). Please verify your connection or try again later.`
       };
     }
   } catch (_e) {
     return {
       status: "error",
-      message: "Incorrect details provided or Grade Card not found."
+      message: "Network error: Unable to connect to server. Please check your internet connection."
     };
   }
 }
+

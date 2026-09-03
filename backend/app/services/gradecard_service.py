@@ -41,8 +41,10 @@ class GradeCardService:
 
         url = f"{GradeCardService.BASE_URL}?eno={eno}&prog={prog}&type={gtype}"
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.1 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache"
         }
 
         try:
@@ -52,22 +54,27 @@ class GradeCardService:
                 if response.status_code != 200:
                     return {
                         "status": "error",
-                        "message": "Incorrect details provided or Grade Card not found."
+                        "message": f"Official IGNOU portal returned status HTTP {response.status_code}. Please try again later."
                     }
 
                 html_text = response.text
                 if any(err in html_text for err in ["No Record Found", "Enrollment Number Not Found", "Invalid Enrollment Number", "Grade Card Not Found", "Invalid Enrolment"]):
                     return {
                         "status": "error",
-                        "message": "Incorrect details provided or Grade Card not found."
+                        "message": "Incorrect details provided or Grade Card not found on official IGNOU portal."
                     }
 
                 return GradeCardService._parse_gradecard_html(html_text, eno, prog, gtype)
 
+        except httpx.TimeoutException:
+            return {
+                "status": "error",
+                "message": "Official IGNOU Grade Card portal timed out. Please try again later."
+            }
         except Exception as _e:
             return {
                 "status": "error",
-                "message": "Incorrect details provided or Grade Card not found."
+                "message": "Unable to connect to official IGNOU portal. Please try again later."
             }
 
     @staticmethod
