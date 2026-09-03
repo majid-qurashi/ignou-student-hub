@@ -6,7 +6,7 @@ from typing import Optional
 router = APIRouter()
 
 class GradeCardCheckRequest(BaseModel):
-    enrollment_no: str = Field(..., example="2453437004", description="Student Enrollment Number")
+    enrollment_no: str = Field(..., example="2633547882", description="Student Enrollment Number")
     programme_code: str = Field(..., example="BSCM", description="IGNOU Programme Code e.g. BSCM, BCA, BA, BAG")
     type: Optional[int] = Field(None, description="Grade Card Type: 1, 2, 4, or 3. Optional.")
 

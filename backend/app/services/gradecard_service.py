@@ -82,26 +82,60 @@ class GradeCardService:
         soup = BeautifulSoup(html_text, "html.parser")
 
         # 1. METADATA EXTRACTION
-        student_name = "STUDENT"
+        student_name = ""
 
-        lbl_name_span = soup.find(id=re.compile(r'lblname', re.I))
-        if lbl_name_span:
-            td_parent = lbl_name_span.find_parent("td")
-            if td_parent:
-                next_td = td_parent.find_next_sibling("td")
-                if next_td and next_td.get_text(strip=True):
-                    student_name = next_td.get_text(strip=True)
+        # Strategy 1: Direct ID match for IGNOU's lblDispname span
+        disp_span = soup.find(id=re.compile(r'lblDispname', re.I))
+        if disp_span and disp_span.get_text(strip=True):
+            student_name = disp_span.get_text(strip=True)
 
-        if student_name == "STUDENT":
-            for td in soup.find_all(["td", "span", "b"]):
-                txt = td.get_text(strip=True)
-                if "NAME:" in txt.upper():
-                    nxt = td.find_next_sibling()
-                    if nxt and nxt.get_text(strip=True) and "PROGRAMME" not in nxt.get_text(strip=True).upper():
-                        student_name = nxt.get_text(strip=True)
-                        break
+        # Strategy 2: lblname span sibling or parent-td sibling
+        if not student_name:
+            lbl_name_span = soup.find(id=re.compile(r'lblname', re.I))
+            if lbl_name_span:
+                nxt = lbl_name_span.find_next_sibling()
+                if nxt and nxt.get_text(strip=True):
+                    student_name = nxt.get_text(strip=True)
+                else:
+                    td_parent = lbl_name_span.find_parent("td")
+                    if td_parent:
+                        next_td = td_parent.find_next_sibling("td")
+                        if next_td and next_td.get_text(strip=True):
+                            student_name = next_td.get_text(strip=True)
 
+        # Strategy 3: Regex search in raw HTML for lblDispname
+        if not student_name:
+            m = re.search(r'lblDispname[^>]*>\s*([^<]+)\s*</span', html_text, re.I)
+            if m and m.group(1).strip():
+                student_name = m.group(1).strip()
+
+        # Strategy 4: Search for "Name:" in elements and check text or siblings
+        if not student_name:
+            for elem in soup.find_all(["td", "th", "span", "b", "div", "p"]):
+                txt = elem.get_text(strip=True)
+                if re.search(r'\bNAME\b\s*:', txt, re.I):
+                    parts = re.split(r'\bNAME\b\s*:', txt, flags=re.I)
+                    if len(parts) > 1 and parts[1].strip():
+                        val = parts[1].strip()
+                        val = re.split(r'PROGRAMME|ENROL|COURSE|DATE', val, flags=re.I)[0].strip()
+                        if val:
+                            student_name = val
+                            break
+                    nxt = elem.find_next_sibling()
+                    if nxt and nxt.get_text(strip=True):
+                        val = nxt.get_text(strip=True)
+                        val = re.split(r'PROGRAMME|ENROL|COURSE|DATE', val, flags=re.I)[0].strip()
+                        if val and val.upper() != "NAME:":
+                            student_name = val
+                            break
+
+        # Clean up name string
         student_name = re.sub(r'\s+', ' ', student_name).strip()
+        student_name = student_name.lstrip(": ").rstrip(":")
+
+        if not student_name or student_name.upper() in ["NAME", "NAME:", "STUDENT", "N/A"]:
+            student_name = "STUDENT"
+
 
         # 2. EXACT TABLE SCRAPING (9 Explicit Keys)
         tables = soup.find_all("table")

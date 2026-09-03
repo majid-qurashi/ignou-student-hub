@@ -246,7 +246,7 @@ export default function HomePage() {
                   type="text"
                   value={enrollmentNo}
                   onChange={(e) => setEnrollmentNo(e.target.value)}
-                  placeholder="e.g. 2453437004"
+                  placeholder="e.g. 2633547882"
                   className="w-full input-field text-xs font-mono"
                   required
                 />

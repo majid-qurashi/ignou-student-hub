@@ -44,16 +44,40 @@ function parseGradeCardHtml(htmlText: string, eno: string, prog: string, gtype: 
   }
 
   // 2. Metadata Extraction (Student Name)
-  let studentName = 'STUDENT';
-  const nameMatch = htmlText.match(/lblname[^>]*>([^<]+)/i) || 
-                    htmlText.match(/Name\s*:?\s*<\/td>\s*<td[^>]*>([^<]+)/i) ||
-                    htmlText.match(/Name\s*:?\s*([^<,\n]+)/i);
-  if (nameMatch && nameMatch[1]) {
-    const extracted = cleanHtmlTags(nameMatch[1]);
-    if (extracted && extracted.toUpperCase() !== 'STUDENT' && !extracted.toUpperCase().includes('PROGRAMME')) {
-      studentName = extracted;
+  let studentName = '';
+  
+  // Strategy 1: Match IGNOU's lblDispname span value directly
+  const dispNameMatch = htmlText.match(/lblDispname[^>]*>([^<]+)/i);
+  if (dispNameMatch && dispNameMatch[1]) {
+    studentName = cleanHtmlTags(dispNameMatch[1]);
+  }
+
+  // Strategy 2: Match Name label td followed by value td
+  if (!studentName) {
+    const tdMatch = htmlText.match(/lblname[\s\S]*?<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i) ||
+                    htmlText.match(/Name\s*:?\s*<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i);
+    if (tdMatch && tdMatch[1]) {
+      studentName = cleanHtmlTags(tdMatch[1]);
     }
   }
+
+  // Strategy 3: Inline regex match for Name: <val>
+  if (!studentName) {
+    const inlineMatch = htmlText.match(/\bNAME\b\s*:\s*([^<\r\n]+)/i);
+    if (inlineMatch && inlineMatch[1]) {
+      let candidate = cleanHtmlTags(inlineMatch[1]);
+      candidate = candidate.split(/PROGRAMME|ENROL|COURSE|DATE/i)[0].trim();
+      if (candidate) {
+        studentName = candidate;
+      }
+    }
+  }
+
+  studentName = studentName.replace(/^[:\s]+/, '').replace(/[:\s]+$/, '').replace(/\s+/g, ' ').trim();
+  if (!studentName || ['NAME', 'NAME:', 'STUDENT', 'N/A'].includes(studentName.toUpperCase())) {
+    studentName = 'STUDENT';
+  }
+
 
   // 3. Extract Tables & Header Mappings
   const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
