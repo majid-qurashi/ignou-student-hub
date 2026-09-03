@@ -1,7 +1,15 @@
 import { IGNOU_PROGRAMMES } from '../lib/programmes';
 import { AVAILABLE_YEARS } from '../lib/data';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+const getApiBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return '/api';
+  }
+  return 'http://127.0.0.1:8000/api';
+};
 
 export interface ApiProgramme {
   id: number;
@@ -80,7 +88,8 @@ export interface GradeCardResponse {
 
 export async function fetchApiProgrammes(): Promise<{ code: string; name: string; category?: string }[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/programmes`, { cache: 'no-store' });
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/programmes`, { cache: 'no-store' });
     if (res.ok) {
       const data: ApiProgramme[] = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -99,7 +108,8 @@ export async function fetchApiProgrammes(): Promise<{ code: string; name: string
 
 export async function fetchApiSessions(programmeCode: string): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/programmes/${encodeURIComponent(programmeCode)}/sessions`, { cache: 'no-store' });
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/programmes/${encodeURIComponent(programmeCode)}/sessions`, { cache: 'no-store' });
     if (res.ok) {
       const data: ApiSession[] = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -114,8 +124,9 @@ export async function fetchApiSessions(programmeCode: string): Promise<string[]>
 
 export async function fetchApiCourses(programmeCode: string, sessionLabel: string): Promise<{ code: string; name: string }[]> {
   try {
+    const baseUrl = getApiBaseUrl();
     const res = await fetch(
-      `${API_BASE_URL}/programmes/${encodeURIComponent(programmeCode)}/courses?session=${encodeURIComponent(sessionLabel)}`,
+      `${baseUrl}/programmes/${encodeURIComponent(programmeCode)}/courses?session=${encodeURIComponent(sessionLabel)}`,
       { cache: 'no-store' }
     );
     if (res.ok) {
@@ -136,7 +147,8 @@ export async function fetchApiAssignments(
   courseCode?: string
 ): Promise<{ success: boolean; data: ApiAssignment[]; message?: string }> {
   try {
-    let url = `${API_BASE_URL}/assignments?programme=${encodeURIComponent(programmeCode)}&session=${encodeURIComponent(sessionLabel)}`;
+    const baseUrl = getApiBaseUrl();
+    let url = `${baseUrl}/assignments?programme=${encodeURIComponent(programmeCode)}&session=${encodeURIComponent(sessionLabel)}`;
     if (courseCode) {
       url += `&course=${encodeURIComponent(courseCode)}`;
     }
@@ -167,7 +179,8 @@ export async function fetchGradeCard(
   type?: number
 ): Promise<GradeCardResponse> {
   try {
-    const res = await fetch(`${API_BASE_URL}/gradecard/check`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/gradecard/check`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
