@@ -29,7 +29,15 @@ export default function PercentageCalculatorPage() {
     <div className="py-8 px-4 max-w-xl mx-auto space-y-6">
       <div className="text-center space-y-1">
         <h1 className="text-2xl font-bold text-slate-900">IGNOU Percentage Calculator</h1>
-        <p className="text-xs text-slate-600">Calculate your percentage using obtained marks and total marks.</p>
+        <p className="text-xs text-slate-600">Calculate your percentage manually or fetch your official grade card.</p>
+        <div className="pt-2">
+          <a
+            href="/gradecard"
+            className="inline-flex items-center text-xs font-semibold text-[#0D6EFD] bg-blue-50 border border-blue-200 rounded px-3 py-1.5 hover:bg-blue-100 transition"
+          >
+            Looking for automatic grade card percentage? Try the new Grade Card Portal →
+          </a>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-300 rounded p-6 shadow-xs space-y-4">

@@ -12,11 +12,8 @@ export const Header: React.FC = () => {
     { label: 'Home', href: '/' },
     { label: 'Assignments', href: '/assignments' },
     { label: 'Question Papers', href: '/question-papers' },
-    { label: 'Model Papers', href: '/model-papers' },
     { label: 'Projects', href: '/projects' },
-    { label: 'Tools', href: '/tools' },
-    { label: 'Grade Card', href: '/gradecard' },
-    { label: 'Developer', href: '/developer' }
+    { label: 'Grade Card', href: '/gradecard' }
   ];
 
   return (
@@ -46,22 +43,30 @@ export const Header: React.FC = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-5 text-xs font-semibold">
+        <nav className="hidden md:flex items-center space-x-6 text-xs font-medium">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-slate-700 hover:text-[#0b3d91] transition py-1"
+              className="text-slate-600 hover:text-slate-900 transition py-1"
             >
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/login"
-            className="px-3.5 py-1.5 bg-[#0b3d91] hover:bg-[#1557c0] text-white rounded text-xs font-semibold transition"
-          >
-            Login
-          </Link>
+          <div className="flex items-center space-x-3 pl-2 border-l border-slate-200">
+            <Link
+              href="/login"
+              className="text-slate-600 hover:text-slate-900 transition font-medium"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/gradecard"
+              className="px-3.5 py-1.5 bg-[#714B67] hover:bg-[#5C3D54] text-white rounded-md text-xs font-semibold transition shadow-2xs"
+            >
+              Check Grade Card
+            </Link>
+          </div>
         </nav>
 
         {/* Mobile Hamburger Toggle */}

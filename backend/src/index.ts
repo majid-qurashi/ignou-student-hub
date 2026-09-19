@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import gradeCardRoutes from './routes/gradeCardRoutes';
@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Health Check
-app.get('/api/v1/health', (req, res) => {
+app.get('/api/v1/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
     service: 'IGNOU Student Hub Backend API',

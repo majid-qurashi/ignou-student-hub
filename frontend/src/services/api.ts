@@ -53,36 +53,54 @@ export interface ApiAssignment {
 }
 
 export interface CourseDetailItem {
-  course: string;
-  asgn1: number | string;
-  lab1: number | string;
-  lab2: number | string;
-  lab3: number | string;
-  lab4: number | string;
-  term_end_theory: number | string;
-  term_end_practical: number | string;
-  evaluated_component_type?: string;
-  credits?: number;
-  calculated_score: number | string;
+  course_code: string;
+  course_title?: string;
+  credits?: number | string;
+  semester?: string;
+  assignment_marks: number | string;
+  tee_theory_marks: number | string;
+  tee_practical_marks: number | string;
+  overall_marks: number | string;
   status: string;
+  // Backward compatibility fields
+  course?: string;
+  asgn1?: number | string;
+  lab1?: number | string;
+  lab2?: number | string;
+  lab3?: number | string;
+  lab4?: number | string;
+  term_end_theory?: number | string;
+  term_end_practical?: number | string;
+  calculated_score?: number | string;
+  evaluated_component_type?: string;
 }
 
 export interface GradeCardResponse {
   status: string; // "success" or "error"
   message?: string;
+  report_id?: string;
   student_info?: {
     student_name: string;
     enrollment_no: string;
-    program: string;
-    type_group: string;
+    programme?: string;
+    programme_code?: string;
+    program?: string;
+    status_date?: string;
+    retrieved_on?: string;
+    type_group?: string;
+    ignou_type?: number;
+    official_portal_url?: string;
   };
   summary?: {
-    overall_percentage: number;
+    overall_percentage?: number | null;
     total_courses: number;
     completed_courses: number;
     not_completed_courses: number;
+    calculation_method?: string;
+    calculation_status?: string;
     total_credits?: number;
   };
+  courses?: CourseDetailItem[];
   course_details?: CourseDetailItem[];
 }
 
@@ -211,6 +229,52 @@ export async function fetchGradeCard(
       status: "error",
       message: "Network error: Unable to connect to server. Please check your internet connection."
     };
+  }
+}
+
+export async function downloadMarksReport(
+  reportId?: string,
+  gradeCardData?: any,
+  fallbackFilename?: string
+): Promise<boolean> {
+  try {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/gradecard/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        report_id: reportId,
+        grade_card_data: gradeCardData
+      }),
+      cache: 'no-store'
+    });
+
+    if (!res.ok) {
+      return false;
+    }
+
+    const blob = await res.blob();
+    // Determine filename from content-disposition header if present
+    let filename = fallbackFilename || 'ignou-marks-report.pdf';
+    const disposition = res.headers.get('content-disposition');
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      if (match && match[1]) {
+        filename = match[1].trim();
+      }
+    }
+
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(downloadUrl);
+    document.body.removeChild(a);
+    return true;
+  } catch (_e) {
+    return false;
   }
 }
 
